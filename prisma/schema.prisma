@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+model User{
+  id String @id @default(cuid())
+  name String
+  email String
+  password String
+  blogs Blog[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  bookmark Bookmark?
+}
+
+model Blog{
+  id String @id @default(cuid())
+  user User @relation(fields: [user_id], references: [id])
+  user_id String
+  bookmarks BookmarkOnBlog[]
+  categories CategoryOnBlog[]
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  cover_image String
+  content String
+}
+
+model Bookmark{
+  id String @id @default(cuid())
+  blogs BookmarkOnBlog[]
+  user User @relation(fields: [user_id], references: [id])
+  user_id String @unique
+}
+
+model BookmarkOnBlog {
+  blog       Blog     @relation(fields: [blog_id], references: [id])
+  blog_id     String 
+  bookmark   Bookmark @relation(fields: [bookmark_id], references: [id])
+  bookmark_id String // relation scalar field (used in the `@relation` attribute above)
+  assignedAt DateTime @default(now())
+  assignedBy String
+  @@id([bookmark_id, blog_id])
+}
+
+model Category{
+  id String @id @default(cuid())
+  name String
+  blogs CategoryOnBlog[]
+}
+
+model CategoryOnBlog{
+  blog Blog @relation( fields: [blog_id],references: [id])
+  blog_id String
+  category Category @relation(fields: [category_id],references: [id])
+  category_id String
+  @@id([blog_id,category_id])
+}
